@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluación Ciencias Unidad 3</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#fff; --ink:#1d2433; --muted:#5b6578; --line:#d5dbe5;
+    --brand:#1f4e8c; --brand-soft:#e7eef8;
+    --l3:#2e7d32; --l2:#1565c0; --l1:#ef8f00; --l0:#c62828;
+    --l3s:#e3f3e4; --l2s:#e3eefb; --l1s:#fff2dc; --l0s:#fbe5e5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",system-ui,Arial,sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}
+  header.top{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  header.top h1{margin:0;font-size:18px;color:var(--brand)}
+  header.top .sub{color:var(--muted);font-size:13px}
+  header.top .titles{flex:1;min-width:240px}
+  .obj{margin-top:8px;font-size:13px}
+  .grid-info{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-top:14px}
+  .grid-info label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px}
+  .grid-info input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:15px}
+  .grid-info input:focus{outline:2px solid var(--brand);border-color:transparent}
+
+  /* Timer */
+  .timer{position:sticky;top:0;z-index:10;margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .clock{font:700 34px/1 "Consolas","Courier New",monospace;min-width:130px;color:var(--brand)}
+  .clock.warn{color:var(--l1)} .clock.over{color:var(--l0)}
+  .bar{flex:1;min-width:160px;height:10px;background:#e8ecf2;border-radius:99px;overflow:hidden}
+  .bar>div{height:100%;width:100%;background:var(--brand);transition:width .25s linear}
+  .timer .msg{font-weight:600;color:var(--l0);display:none}
+  .timer.done .msg{display:inline}
+  .summary-mini{font-size:13px;color:var(--muted)}
+  .summary-mini b{color:var(--ink);font-size:15px}
+  button{font:600 13px "Segoe UI",system-ui,sans-serif;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  button:hover{background:var(--brand-soft)}
+  button.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+  button.primary:hover{background:#173d6e}
+
+  section.block{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  section.block h2{margin:0;padding:12px 16px;font-size:15px;background:var(--brand);color:#fff;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  table.rub{width:100%;border-collapse:collapse;table-layout:fixed}
+  table.rub th,table.rub td{border:1px solid var(--line);padding:8px;vertical-align:top}
+  table.rub thead th{background:#f0f3f8;font-size:12px}
+  table.rub th.crit{width:17%;text-align:left;font-size:13px;background:#fafbfd}
+  table.rub td.opt{cursor:pointer;font-size:12.5px;transition:background .15s,box-shadow .15s;position:relative}
+  table.rub td.opt:hover{background:#f5f8fc}
+  td.opt.sel.l3{background:var(--l3s);box-shadow:inset 0 0 0 3px var(--l3)}
+  td.opt.sel.l2{background:var(--l2s);box-shadow:inset 0 0 0 3px var(--l2)}
+  td.opt.sel.l1{background:var(--l1s);box-shadow:inset 0 0 0 3px var(--l1)}
+  td.opt.sel.l0{background:var(--l0s);box-shadow:inset 0 0 0 3px var(--l0)}
+  td.opt.sel::after{content:"✔";position:absolute;top:4px;right:6px;font-weight:700}
+  .pts{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;margin-bottom:4px;color:#fff}
+  .pts.l3{background:var(--l3)} .pts.l2{background:var(--l2)} .pts.l1{background:var(--l1)} .pts.l0{background:var(--l0)}
+  .crit .got{display:block;margin-top:6px;font-size:12px;color:var(--muted);font-weight:400}
+  .sec-foot{display:flex;justify-content:flex-end;gap:24px;padding:10px 16px;background:#fafbfd;font-size:14px;flex-wrap:wrap}
+
+  .result{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:center}
+  .stat{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .stat small{display:block;color:var(--muted);font-size:12px}
+  .stat b{font-size:22px}
+  .stat.final{background:var(--brand-soft);border-color:var(--brand)}
+  .stat.final b{font-size:34px}
+  .stat.final b.red{color:var(--l0)} .stat.final b.blue{color:var(--brand)}
+  .warnings{grid-column:1/-1;color:var(--l1);font-size:13px;font-weight:600}
+  .actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .note{grid-column:1/-1;font-size:12px;color:var(--muted)}
+  textarea{width:100%;min-height:60px;border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+  .obs{grid-column:1/-1}
+  .obs label{font-size:12px;color:var(--muted);font-weight:600}
+
+  .lvl{display:none}
+
+  /* Tablet y celular: cada criterio pasa a ser una tarjeta con sus 4 opciones */
+  @media (max-width:820px){
+    .wrap{padding:10px}
+    header.top{padding:14px}
+    .grid-info{grid-template-columns:1fr 1fr}
+    .grid-info > div:first-child{grid-column:1/-1}
+    .grid-info input{font-size:16px}
+    .result{grid-template-columns:1fr 1fr;padding:14px}
+    table.rub, table.rub tbody, table.rub tr{display:block;width:100%}
+    table.rub thead{display:none}
+    table.rub tr{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;border-bottom:1px solid var(--line)}
+    table.rub th.crit{grid-column:1/-1;width:auto;border:0;padding:4px 2px;background:none;font-size:14px}
+    table.rub td.opt{display:block;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px}
+    .lvl{display:inline;font-weight:700;font-size:12px;margin-left:4px}
+    .timer{gap:10px;padding:10px 12px}
+    .clock{font-size:28px;min-width:0}
+    .bar{order:5;flex-basis:100%}
+    .sec-foot{justify-content:space-between}
+  }
+  @media (max-width:520px){
+    .grid-info{grid-template-columns:1fr}
+    table.rub tr{grid-template-columns:1fr}
+    .result{grid-template-columns:1fr}
+    .stat.final{order:-1}
+    .actions button{flex:1 1 100%}
+    .timer button{flex:1}
+    section.block h2{font-size:14px}
+  }
+  @media print{
+    .timer button,.actions{display:none}
+    .timer{position:static}
+    body{background:#fff}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="titles">
+      <h1>Colegio Hispano Americano Río Viejo</h1>
+      <div class="sub"><i>Al Servicio de Dios y la Educación</i> · Coordinación UTP</div>
+      <div style="margin-top:6px;font-weight:700">Evaluación Ciencias Naturales · Unidad N°3</div>
+      <div class="sub">Karen Uribe / Valeska Cáceres</div>
+      <div class="obj"><b>Objetivo:</b> Clasificar los recursos naturales energéticos en no renovables y renovables y proponer medidas para el uso responsable de la energía.</div>
+    </div>
+  </header>
+
+  <div class="grid-info">
+    <div><label for="nombre">Nombre(s) de la(s) estudiante(s)</label><input id="nombre" placeholder="Escribe el nombre…" autocomplete="off"></div>
+    <div><label for="curso">Curso</label><input id="curso" placeholder="Ej: 6° Básico A" autocomplete="off"></div>
+    <div><label for="fecha">Fecha</label><input id="fecha" type="date"></div>
+  </div>
+
+  <div class="timer" id="timerBox">
+    <div class="clock" id="clock">05:00</div>
+    <div class="bar"><div id="barFill"></div></div>
+    <span class="msg">⏰ ¡Tiempo cumplido!</span>
+    <button class="primary" id="btnStart">▶ Iniciar</button>
+    <button id="btnReset">↺ Reiniciar</button>
+    <span class="summary-mini">Nota: <b id="miniNota">—</b></span>
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="result">
+    <div class="stat"><small>Contenido (80%)</small><b id="rA">0 / 9</b><div class="sub" id="nA">Nota —</div></div>
+    <div class="stat"><small>Disertación (20%)</small><b id="rB">0 / 24</b><div class="sub" id="nB">Nota —</div></div>
+    <div class="stat"><small>Tiempo utilizado</small><b id="rT">00:00</b></div>
+    <div class="stat final"><small>NOTA FINAL</small><b id="rN">—</b></div>
+    <div class="warnings" id="warn"></div>
+    <div class="obs"><label for="obs">Observaciones (opcional)</label><textarea id="obs" placeholder="Comentarios para la estudiante…"></textarea></div>
+    <div class="note">Escala 2,0 – 7,0 con exigencia del 60% (nota 4,0 al 60% del puntaje). Cada sección se califica por separado y la nota final = 80% nota contenido + 20% nota disertación.</div>
+    <div class="actions">
+      <button id="btnNew">🗑 Nueva evaluación</button>
+      <button onclick="window.print()">🖨 Imprimir</button>
+      <button class="primary" id="btnExport">⬇ Exportar HTML</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LEVELS = [
+  {pts:3, name:"Excelente"}, {pts:2, name:"Destacado"},
+  {pts:1, name:"Satisfactorio"}, {pts:0, name:"Insatisfactorio"}
+];
+
+const SECTIONS = [
+  { id:"A", title:"Contenido", weight:0.8, criteria:[
+    ["1. Contenido científico", [
+      "Clasifican correctamente las fuentes de energía en renovables y no renovables, entregan ejemplos pertinentes y utilizan conceptos científicos adecuados.",
+      "Clasifican correctamente la mayoría de las fuentes de energía y entregan algunos ejemplos, presentando pequeños errores conceptuales.",
+      "Presentan dificultades para clasificar las fuentes de energía o entregan ejemplos poco pertinentes.",
+      "No logran clasificar las fuentes de energía ni explicar sus características."]],
+    ["2. Comparación de recursos energéticos", [
+      "Comparan recursos renovables y no renovables, estableciendo claramente 5 ventajas y 5 desventajas, utilizando información pertinente.",
+      "Comparan ambos tipos de recursos, identificando al menos 3 ventajas y 3 desventajas de manera adecuada.",
+      "La comparación es incompleta y presenta menos de 3 ventajas o desventajas, o contiene errores importantes.",
+      "No realizan una comparación entre recursos renovables y no renovables."]],
+    ["3. Uso responsable de la energía", [
+      "Evalúan y explican claramente 3 medidas para el uso responsable de la energía, justificando su importancia y comunicándolas de manera clara.",
+      "Presentan 3 medidas para el uso responsable de la energía, pero explican o justifican solo algunas de ellas.",
+      "Presentan 1 o 2 medidas, con escasa explicación o justificación.",
+      "No presentan medidas para el uso responsable de la energía."]]
+  ]},
+  { id:"B", title:"Disertación", weight:0.2, criteria:[
+    ["1. Dominio del tema", [
+      "Todos los integrantes demuestran un dominio profundo del tema. Explican con sus propias palabras, sin depender de la lectura del material de apoyo, y responden preguntas relacionadas con el contenido.",
+      "La mayoría demuestra conocimiento del tema y explica con sus propias palabras, aunque en algunos momentos necesita consultar el material de apoyo.",
+      "Los integrantes presentan dificultades para explicar el tema y dependen frecuentemente de la lectura del material de apoyo.",
+      "No demuestran conocimiento del tema y leen la totalidad de la información presentada."]],
+    ["2. Estructura de la disertación", [
+      "Presenta saludo y presentación, introducción, desarrollo claro y cierre. Las ideas siguen un orden lógico y facilitan la comprensión.",
+      "Presenta la estructura general solicitada, pero omite uno de sus elementos o presenta pequeños problemas de organización.",
+      "La estructura es poco clara y faltan dos o más elementos solicitados.",
+      "No presenta una estructura organizada y la exposición no se relaciona con el tema."]],
+    ["3. Material de apoyo", [
+      "Utiliza un material visual atractivo, ordenado, pertinente y relacionado con el tema. La información es breve y sirve como apoyo, sin reemplazar la exposición oral.",
+      "El material es adecuado y está relacionado con el tema, aunque presenta exceso o falta de información en algunos aspectos.",
+      "El material presenta información poco clara, desordenada o poco relacionada con la exposición.",
+      "No presenta material de apoyo."]],
+    ["4. Elementos verbales, no verbales y paraverbales", [
+      "Mantienen contacto visual, postura adecuada y utilizan gestos pertinentes. Emplean volumen, tono, ritmo y pausas adecuadas para enfatizar las ideas importantes.",
+      "Utilizan adecuadamente algunos recursos verbales, no verbales y paraverbales, aunque presentan dificultades ocasionales.",
+      "Presentan escaso contacto visual, poca expresión corporal o dificultades de volumen, tono o ritmo.",
+      "Leen la exposición sin utilizar recursos expresivos que apoyen la comunicación."]],
+    ["5. Organización y planificación del trabajo", [
+      "Utilizan responsablemente el tiempo de trabajo, distribuyen las tareas y cumplen oportunamente con las actividades asignadas.",
+      "Organizan adecuadamente la mayor parte del trabajo, aunque requieren algunos recordatorios o apoyo.",
+      "Presentan dificultades para organizar el tiempo y completar las tareas asignadas.",
+      "No aprovechan el tiempo de trabajo y no cumplen con las tareas asignadas."]],
+    ["6. Trabajo en equipo", [
+      "Todos los integrantes participan activamente, cumplen sus responsabilidades y colaboran de manera respetuosa y equitativa.",
+      "La mayoría participa y cumple sus responsabilidades, aunque la distribución del trabajo no siempre es equilibrada.",
+      "La participación es desigual y algunos integrantes cumplen parcialmente sus responsabilidades.",
+      "Uno o más integrantes no participan ni cumplen con las responsabilidades asignadas."]],
+    ["7. Presentación personal", [
+      "Se presentan ordenados, aseados y con su uniforme correspondiente, demostrando preocupación y respeto por la actividad.",
+      "Se presentan con su uniforme y aseados, aunque evidencian poca preocupación por algunos aspectos de su presentación.",
+      "Presentan parte de su vestimenta o presentación personal de manera poco adecuada para la actividad.",
+      "No cumplen con la presentación personal solicitada."]],
+    ["8. Puntualidad y responsabilidad", [
+      "Todos los integrantes se presentan en la fecha y horario establecidos, con el material de apoyo preparado y cumplen responsablemente con la actividad.",
+      "Se presentan en la fecha indicada, pero presentan alguna dificultad menor relacionada con el material o la preparación.",
+      "Se presentan en la fecha indicada, pero sin el material de apoyo o con una preparación insuficiente.",
+      "No se presentan a disertar y no justifican oportunamente su inasistencia."]]
+  ]}
+];
+
+const EXIGENCIA = 0.6, NOTA_MIN = 2.0, NOTA_MAX = 7.0;
+const sel = {};   // key "A0" -> level index (0..3)
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- Render rubric ---------- */
+function render(){
+  $("sections").innerHTML = SECTIONS.map(s => `
+    <section class="block">
+      <h2><span>${s.title}</span><span>Ponderación ${Math.round(s.weight*100)}%</span></h2>
+      <table class="rub">
+        <thead><tr><th class="crit">Criterio</th>${LEVELS.map(l=>`<th>${l.name}<br>(${l.pts} punto${l.pts===1?"":"s"})</th>`).join("")}</tr></thead>
+        <tbody>${s.criteria.map((c,i)=>`
+          <tr><th class="crit">${c[0]}<span class="got" id="got-${s.id}${i}">Sin evaluar</span></th>
+          ${c[1].map((d,j)=>`<td class="opt l${LEVELS[j].pts}" data-k="${s.id}${i}" data-j="${j}"><span class="pts l${LEVELS[j].pts}">${LEVELS[j].pts} pts</span><span class="lvl">${LEVELS[j].name}</span><br>${d}</td>`).join("")}
+          </tr>`).join("")}
+        </tbody>
+      </table>
+      <div class="sec-foot"><span>Puntaje: <b id="foot-${s.id}">0 / ${s.criteria.length*3}</b></span><span>Nota: <b id="footN-${s.id}">—</b></span></div>
+    </section>`).join("");
+
+  document.querySelectorAll("td.opt").forEach(td => td.addEventListener("click", () => {
+    const k = td.dataset.k, j = +td.dataset.j;
+    sel[k] = sel[k] === j ? undefined : j;   // second click deselects
+    if (sel[k] === undefined) delete sel[k];
+    paint(); calc();
+  }));
+}
+
+function paint(){
+  document.querySelectorAll("td.opt").forEach(td => td.classList.toggle("sel", sel[td.dataset.k] === +td.dataset.j));
+  SECTIONS.forEach(s => s.criteria.forEach((_,i) => {
+    const k = s.id+i, g = $("got-"+k);
+    g.textContent = sel[k] === undefined ? "Sin evaluar" : `${LEVELS[sel[k]].name}: ${LEVELS[sel[k]].pts} pts`;
+  }));
+}
+
+/* ---------- Grading ---------- */
+function nota(p, max){
+  const r = p/max;
+  const n = r < EXIGENCIA ? NOTA_MIN + (4-NOTA_MIN)*r/EXIGENCIA : 4 + (NOTA_MAX-4)*(r-EXIGENCIA)/(1-EXIGENCIA);
+  return Math.round(n*10)/10;
+}
+const fmt = n => n.toFixed(1).replace(".", ",");
+
+function results(){
+  let missing = 0;
+  const secs = SECTIONS.map(s => {
+    let pts = 0;
+    s.criteria.forEach((_,i) => {
+      const v = sel[s.id+i];
+      if (v === undefined) missing++; else pts += LEVELS[v].pts;
+    });
+    const max = s.criteria.length*3;
+    return {s, pts, max, nota: nota(pts, max)};
+  });
+  const final = Math.round(secs.reduce((a,x)=>a + x.nota*x.s.weight, 0)*10)/10;
+  return {secs, final, missing};
+}
+
+function calc(){
+  const r = results();
+  r.secs.forEach(x => {
+    $("foot-"+x.s.id).textContent = `${x.pts} / ${x.max}`;
+    $("footN-"+x.s.id).textContent = fmt(x.nota);
+    $("r"+x.s.id).textContent = `${x.pts} / ${x.max}`;
+    $("n"+x.s.id).textContent = "Nota " + fmt(x.nota);
+  });
+  const any = Object.keys(sel).length > 0;
+  $("rN").textContent = any ? fmt(r.final) : "—";
+  $("rN").className = r.final < 4 ? "red" : "blue";
+  $("miniNota").textContent = any ? fmt(r.final) : "—";
+  $("warn").textContent = r.missing ? `⚠ Faltan ${r.missing} criterio(s) por evaluar (se cuentan como 0 puntos).` : "";
+}
+
+/* ---------- Timer ---------- */
+const TOTAL = 5*60;
+let elapsed = 0, running = false, tick = null, lastTs = 0, beeped = false;
+const mmss = s => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(Math.floor(s%60)).padStart(2,"0")}`;
+
+function drawTimer(){
+  const left = TOTAL - elapsed, c = $("clock");
+  c.textContent = left >= 0 ? mmss(Math.ceil(left)) : "+" + mmss(-left);
+  c.className = "clock" + (left < 0 ? " over" : left <= 60 ? " warn" : "");
+  $("barFill").style.width = Math.max(0, left/TOTAL*100) + "%";
+  $("barFill").style.background = left <= 60 ? "var(--l0)" : "var(--brand)";
+  $("timerBox").classList.toggle("done", left <= 0);
+  $("rT").textContent = mmss(elapsed);
+}
+function beep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [0, .35, .7].forEach(t => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = 880; o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(.3, ctx.currentTime+t); g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime+t+.3);
+      o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+.3);
+    });
+  }catch(e){}
+}
+function step(){
+  const now = performance.now();
+  elapsed += (now - lastTs)/1000; lastTs = now;
+  if (!beeped && elapsed >= TOTAL){ beeped = true; beep(); }
+  drawTimer();
+}
+$("btnStart").onclick = () => {
+  if (running){ step(); clearInterval(tick); running = false; $("btnStart").textContent = "▶ Reanudar"; }
+  else { lastTs = performance.now(); tick = setInterval(step, 200); running = true; $("btnStart").textContent = "⏸ Pausar"; }
+};
+function resetTimer(){
+  clearInterval(tick); running = false; elapsed = 0; beeped = false;
+  $("btnStart").textContent = "▶ Iniciar"; drawTimer();
+}
+$("btnReset").onclick = resetTimer;
+
+/* ---------- New / Export ---------- */
+$("btnNew").onclick = () => {
+  if (!confirm("¿Borrar todo y comenzar una nueva evaluación?")) return;
+  for (const k in sel) delete sel[k];
+  $("nombre").value = ""; $("obs").value = "";
+  resetTimer(); paint(); calc(); $("nombre").focus();
+};
+
+function fechaTxt(){
+  const v = $("fecha").value;
+  if (!v) return "";
+  const [y,m,d] = v.split("-"); return `${d}-${m}-${y}`;
+}
+
+$("btnExport").onclick = () => {
+  const nombre = $("nombre").value.trim();
+  if (!nombre){ alert("Escribe el nombre de la estudiante antes de exportar."); $("nombre").focus(); return; }
+  const r = results();
+  if (r.missing && !confirm(`Faltan ${r.missing} criterio(s) sin evaluar (cuentan como 0). ¿Exportar de todos modos?`)) return;
+
+  const colors = {3:["#e3f3e4","#2e7d32"],2:["#e3eefb","#1565c0"],1:["#fff2dc","#ef8f00"],0:["#fbe5e5","#c62828"]};
+  const secHtml = r.secs.map(x => `
+    <h2>${x.s.title} <span>(${Math.round(x.s.weight*100)}%)</span></h2>
+    <table><thead><tr><th style="width:18%">Criterio</th>${LEVELS.map(l=>`<th>${l.name} (${l.pts})</th>`).join("")}<th style="width:7%">Pts</th></tr></thead><tbody>
+    ${x.s.criteria.map((c,i)=>{
+      const v = sel[x.s.id+i];
+      return `<tr><th>${c[0]}</th>${c[1].map((d,j)=>{
+        const on = v===j, [bg,bd] = colors[LEVELS[j].pts];
+        return `<td class="${on?"on":"off"}" style="${on?`background:${bg};outline:3px solid ${bd};outline-offset:-3px;font-weight:600`:"color:#999"}">${on?`<span class="lv">${LEVELS[j].name} · </span>✔ `:""}${d}</td>`;
+      }).join("")}${v===undefined?`<td class="none">Sin evaluar</td>`:""}<td class="c"><b>${v===undefined?"—":LEVELS[v].pts}</b><span class="lv"> pts</span></td></tr>`;
+    }).join("")}
+    </tbody></table>
+    <p class="r">Puntaje: <b>${x.pts} / ${x.max}</b> &nbsp;·&nbsp; Nota: <b>${fmt(x.nota)}</b></p>`).join("");
+
+  const obs = $("obs").value.trim();
+  const doc = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluación – ${esc(nombre)}</title>
+<style>
+body{font:13px/1.4 "Segoe UI",Arial,sans-serif;color:#1d2433;max-width:1100px;margin:0 auto;padding:20px}
+h1{font-size:18px;color:#1f4e8c;margin:0}h2{font-size:15px;background:#1f4e8c;color:#fff;padding:8px 12px;margin:22px 0 0;border-radius:6px 6px 0 0}h2 span{font-weight:400}
+.sub{color:#5b6578}table{width:100%;border-collapse:collapse}th,td{border:1px solid #d5dbe5;padding:6px;vertical-align:top;font-size:12px}
+thead th{background:#f0f3f8}tbody th{text-align:left;background:#fafbfd}.c{text-align:center;font-size:15px}.r{text-align:right;margin:6px 0}
+.info{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin:14px 0}.info div{border:1px solid #d5dbe5;border-radius:6px;padding:6px 10px}
+.info small{display:block;color:#5b6578}.final{margin-top:20px;border:2px solid #1f4e8c;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:#e7eef8}
+.final .n{font-size:40px;font-weight:700;color:${r.final<4?"#c62828":"#1f4e8c"}}
+.lv,.none{display:none}
+@media print{body{padding:0}}
+@media (max-width:700px){
+ body{padding:12px}
+ .info{grid-template-columns:1fr 1fr}.info div:first-child{grid-column:1/-1}
+ table,tbody,tr,th,td{display:block;width:100%!important}
+ thead,td.off{display:none}
+ tr{border:1px solid #d5dbe5;border-radius:8px;margin:8px 0;overflow:hidden}
+ th,td{border:0}td.on,td.none{display:block;margin:0 6px;border-radius:6px}.none{color:#c62828}
+ .lv{display:inline}.c{text-align:right;font-size:14px}
+ .final{flex-direction:column;align-items:flex-start}.final div{text-align:left!important}
+}
+</style></head><body>
+<h1>Colegio Hispano Americano Río Viejo</h1>
+<div class="sub"><i>Al Servicio de Dios y la Educación</i> · Coordinación UTP</div>
+<p style="margin:6px 0 0"><b>Evaluación Ciencias Naturales · Unidad N°3</b> — Karen Uribe / Valeska Cáceres</p>
+<p class="sub" style="margin:4px 0"><b>Objetivo:</b> Clasificar los recursos naturales energéticos en no renovables y renovables y proponer medidas para el uso responsable de la energía.</p>
+<div class="info">
+ <div><small>Nombre</small><b>${esc(nombre)}</b></div>
+ <div><small>Curso</small><b>${esc($("curso").value.trim()||"—")}</b></div>
+ <div><small>Fecha</small><b>${esc(fechaTxt()||"—")}</b></div>
+ <div><small>Tiempo de disertación</small><b>${mmss(elapsed)}</b> <span class="sub">/ 05:00</span></div>
+</div>
+${secHtml}
+${obs?`<h2>Observaciones</h2><div style="border:1px solid #d5dbe5;padding:10px;white-space:pre-wrap">${esc(obs)}</div>`:""}
+<div class="final">
+ <div>Contenido: <b>${r.secs[0].pts}/${r.secs[0].max}</b> → nota ${fmt(r.secs[0].nota)} × 80%<br>
+ Disertación: <b>${r.secs[1].pts}/${r.secs[1].max}</b> → nota ${fmt(r.secs[1].nota)} × 20%<br>
+ <span class="sub">Escala 2,0–7,0 · exigencia 60%</span></div>
+ <div style="text-align:right">NOTA FINAL<div class="n">${fmt(r.final)}</div></div>
+</div>
+</body></html>`;
+
+  const safe = nombre.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w]+/g,"_").replace(/^_|_$/g,"");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([doc], {type:"text/html"}));
+  a.download = `Evaluacion_CsNaturales_U3_${safe}.html`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+/* ---------- Init ---------- */
+$("fecha").value = new Date().toLocaleDateString("en-CA");
+render(); paint(); calc(); drawTimer();
+</script>
+</body>
+</html>
